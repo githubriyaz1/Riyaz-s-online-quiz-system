@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Online Quiz System</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f2f2f2;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+    .quiz-box {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      width: 500px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+    }
+    h2 {
+      text-align: center;
+    }
+    #timer {
+      color: red;
+      font-weight: bold;
+      text-align: center;
+    }
+    .question {
+      margin: 20px 0 10px;
+    }
+    .options label {
+      display: block;
+      margin: 5px 0;
+    }
+    .nav-buttons {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 20px;
+    }
+    .result {
+      display: none;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="quiz-box">
+    <h2>📝 Online Quiz System</h2>
+    <div id="timer">Time: 60s</div>
+    <div id="progress">Question 1 of 10</div>
+    <div class="question" id="questionText"></div>
+    <div class="options" id="optionsBox"></div>
+    <div class="nav-buttons">
+      <button onclick="prevQuestion()">Previous</button>
+      <button onclick="nextQuestion()">Next</button>
+    </div>
+    <div class="result" id="resultBox">
+      <h3>🎉 Quiz Completed!</h3>
+      <p>Your Score: <span id="score"></span>/10</p>
+      <div id="review"></div>
+    </div>
+  </div>
+
+  <script>
+    const questions = [
+      {
+        q: "What does HTML stand for?",
+        options: ["Hyperlink Markup Language", "Hyper Text Markup Language", "Home Tool Markup Language", "Hyper Tech Main Language"],
+        answer: 1
+      },
+      {
+        q: "Which tag is used to create a hyperlink?",
+        options: ["<a>", "<link>", "<href>", "<hyper>"],
+        answer: 0
+      },
+      {
+        q: "Which language is used for styling web pages?",
+        options: ["HTML", "Python", "CSS", "Java"],
+        answer: 2
+      },
+      {
+        q: "Which tag is used for line break in HTML?",
+        options: ["<break>", "<lb>", "<br>", "<newline>"],
+        answer: 2
+      },
+      {
+        q: "Which symbol is used for comments in JavaScript?",
+        options: ["<!-- -->", "//", "#", "/* */"],
+        answer: 1
+      },
+      {
+        q: "Which HTML tag is used to display an image?",
+        options: ["<img>", "<pic>", "<image>", "<src>"],
+        answer: 0
+      },
+      {
+        q: "What does CSS stand for?",
+        options: ["Color Style Sheet", "Cascading Style Sheets", "Creative Style System", "Computer Styling Sheet"],
+        answer: 1
+      },
+      {
+        q: "How do you create a function in JavaScript?",
+        options: ["function = myFunc()", "function myFunc()", "func myFunc()", "create function myFunc()"],
+        answer: 1
+      },
+      {
+        q: "How do you call a function in JS?",
+        options: ["call myFunc", "myFunc()", "run myFunc", "start(myFunc)"],
+        answer: 1
+      },
+      {
+        q: "How do you write 'Hello' in an alert box?",
+        options: ["alert('Hello')", "msg('Hello')", "print('Hello')", "alertBox('Hello')"],
+        answer: 0
+      }
+    ];
+
+    let current = 0;
+    let userAnswers = new Array(questions.length).fill(null);
+    let timeLeft = 60;
+
+    const questionText = document.getElementById("questionText");
+    const optionsBox = document.getElementById("optionsBox");
+    const timer = document.getElementById("timer");
+    const progress = document.getElementById("progress");
+    const resultBox = document.getElementById("resultBox");
+    const scoreDisplay = document.getElementById("score");
+    const review = document.getElementById("review");
+
+    function loadQuestion() {
+      const q = questions[current];
+      questionText.innerHTML = q.q;
+      progress.innerHTML = `Question ${current + 1} of ${questions.length}`;
+      optionsBox.innerHTML = "";
+
+      q.options.forEach((opt, i) => {
+        const group = "option" + current;
+        const checked = userAnswers[current] === i ? "checked" : "";
+        const disabled = userAnswers[current] !== null ? "disabled" : "";
+        optionsBox.innerHTML += `
+          <label>
+            <input type="radio" name="${group}" value="${i}" onclick="selectOption(${i})" ${checked} ${disabled}>
+            ${opt}
+          </label>`;
+      });
+    }
+
+    function selectOption(index) {
+      if (userAnswers[current] === null) {
+        userAnswers[current] = index;
+      }
+    }
+
+    function nextQuestion() {
+      if (current < questions.length - 1) {
+        current++;
+        loadQuestion();
+      } else {
+        showResult();
+      }
+    }
+
+    function prevQuestion() {
+      if (current > 0) {
+        current--;
+        loadQuestion();
+      }
+    }
+
+    function showResult() {
+      document.querySelector(".nav-buttons").style.display = "none";
+      questionText.style.display = "none";
+      optionsBox.style.display = "none";
+      progress.style.display = "none";
+      resultBox.style.display = "block";
+
+      let score = 0;
+      questions.forEach((q, i) => {
+        if (userAnswers[i] === q.answer) score++;
+      });
+
+      scoreDisplay.textContent = score;
+
+      let reviewHTML = "<h4>Review:</h4><ul>";
+      questions.forEach((q, i) => {
+        const selected = userAnswers[i] !== null ? q.options[userAnswers[i]] : "Not Answered";
+        const correct = q.options[q.answer];
+        reviewHTML += `<li><b>Q${i+1}:</b> ${q.q}<br>✅ Correct: ${correct}<br>🧠 You Selected: ${selected}</li><br>`;
+      });
+      review.innerHTML = reviewHTML + "</ul>";
+    }
+
+    function startTimer() {
+      const interval = setInterval(() => {
+        if (timeLeft <= 0) {
+          clearInterval(interval);
+          showResult();
+        } else {
+          timer.textContent = `Time: ${timeLeft}s`;
+          timeLeft--;
+        }
+      }, 1000);
+    }
+
+    loadQuestion();
+    startTimer();
+  </script>
+</body>
+</html>
